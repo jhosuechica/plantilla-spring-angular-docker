@@ -1,0 +1,18 @@
+# Perfil usado por los tests. Se activa con @ActiveProfiles("test")
+# o automaticamente si lo declaras en el pom (ver POM-ADICIONES.md).
+spring:
+  jpa:
+    hibernate:
+      # En tests dejamos que Hibernate cree el esquema en el contenedor efimero.
+      ddl-auto: create-drop
+    properties:
+      hibernate:
+        format_sql: true
+  flyway:
+    enabled: false
+
+logging:
+  level:
+    root: WARN
+    io.github.jhosuechica.indicadores: DEBUG
+    org.testcontainers: INFO

@@ -1,0 +1,22 @@
+# Normaliza los finales de linea: LF en el repositorio, nativo en el disco.
+# Sin esto, trabajar en Windows y construir en contenedores Linux produce
+# diffs completos por CRLF y scripts que fallan dentro de la imagen.
+* text=auto eol=lf
+
+# Archivos que deben conservar LF si o si (los ejecuta Linux)
+*.sh        text eol=lf
+Dockerfile  text eol=lf
+*.conf      text eol=lf
+*.yml       text eol=lf
+*.yaml      text eol=lf
+
+# Binarios: git no debe tocarlos
+*.png  binary
+*.jpg  binary
+*.jpeg binary
+*.gif  binary
+*.ico  binary
+*.pdf  binary
+*.jar  binary
+*.woff  binary
+*.woff2 binary

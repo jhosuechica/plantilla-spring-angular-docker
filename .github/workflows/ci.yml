@@ -1,0 +1,190 @@
+# =============================================================================
+# Pipeline CI/CD - Sistema de Gestion Institucional de Indicadores
+#
+# Flujo:
+#   pull_request  -> backend + frontend + smoke  (verifica, no publica)
+#   push a main   -> lo anterior + publish       (sube imagenes a Docker Hub)
+#
+# Requisitos en el repo (Settings > Secrets and variables > Actions):
+#   Variable : DOCKERHUB_USERNAME
+#   Secret   : DOCKERHUB_TOKEN  (Access Token de Docker Hub, no la contraseña)
+# =============================================================================
+name: CI/CD
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# Si llegan dos commits seguidos a la misma rama, cancela el pipeline viejo.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ---------------------------------------------------------------------------
+  backend:
+    name: Backend · tests y cobertura
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./backend
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configurar JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+
+      # 'verify' corre unitarios (surefire), integracion (failsafe),
+      # genera el reporte JaCoCo y aplica la regla de cobertura minima.
+      - name: Compilar, testear y verificar cobertura
+        run: mvn -B -ntp verify
+
+      - name: Resumen de cobertura
+        if: always()
+        run: |
+          CSV=target/site/jacoco/jacoco.csv
+          if [ -f "$CSV" ]; then
+            awk -F, 'NR>1 {miss+=$4; cov+=$5} END {
+              total=miss+cov
+              if (total>0) printf "## Cobertura de instrucciones: %.1f%%\n\n(%d de %d cubiertas)\n", cov*100/total, cov, total
+            }' "$CSV" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "No se genero jacoco.csv" >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Guardar reportes
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: reportes-backend
+          path: |
+            backend/target/surefire-reports/
+            backend/target/failsafe-reports/
+            backend/target/site/jacoco/
+          retention-days: 7
+
+  # ---------------------------------------------------------------------------
+  frontend:
+    name: Frontend · lint, tests y build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./frontend
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configurar Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      # --if-present no falla si el script no existe en package.json
+      - name: Lint
+        run: npm run lint --if-present
+
+      - name: Tests
+        run: npm run test --if-present -- --watch=false --browsers=ChromeHeadless
+
+      - name: Build de produccion
+        run: npm run build -- --configuration=production
+
+  # ---------------------------------------------------------------------------
+  # Levanta el stack real y comprueba que responde. Es la diferencia entre
+  # "las imagenes compilan" y "el sistema arranca".
+  smoke:
+    name: Smoke test · docker compose
+    runs-on: ubuntu-latest
+    needs: [backend, frontend]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Preparar variables de entorno
+        run: cp .env.example .env
+
+      - name: Construir imagenes
+        run: docker compose build
+
+      - name: Levantar el stack
+        run: docker compose up -d
+
+      - name: Esperar a que el backend este sano
+        run: |
+          for i in $(seq 1 30); do
+            estado=$(docker inspect -f '{{.State.Health.Status}}' sgii-backend 2>/dev/null || echo "starting")
+            echo "intento $i -> $estado"
+            [ "$estado" = "healthy" ] && exit 0
+            sleep 5
+          done
+          echo "El backend no llego a estado healthy"
+          exit 1
+
+      - name: Verificar endpoints
+        run: |
+          curl -fsS http://localhost:8080/actuator/health | grep -q '"status":"UP"'
+          curl -fsS http://localhost:4200/ > /dev/null
+          echo "Backend y frontend responden correctamente"
+
+      - name: Logs (solo si algo fallo)
+        if: failure()
+        run: docker compose logs --tail=200
+
+      - name: Limpiar
+        if: always()
+        run: docker compose down -v
+
+  # ---------------------------------------------------------------------------
+  publish:
+    name: Publicar imagenes en Docker Hub
+    runs-on: ubuntu-latest
+    needs: [smoke]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configurar Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login en Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ vars.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      # Cada imagen queda etiquetada con 'latest' y con el SHA corto del
+      # commit, para poder hacer rollback a una version exacta.
+      - name: Publicar backend
+        uses: docker/build-push-action@v6
+        with:
+          context: ./backend
+          push: true
+          tags: |
+            ${{ vars.DOCKERHUB_USERNAME }}/sgii-backend:latest
+            ${{ vars.DOCKERHUB_USERNAME }}/sgii-backend:${{ github.sha }}
+          cache-from: type=gha,scope=backend
+          cache-to: type=gha,mode=max,scope=backend
+
+      - name: Publicar frontend
+        uses: docker/build-push-action@v6
+        with:
+          context: ./frontend
+          push: true
+          tags: |
+            ${{ vars.DOCKERHUB_USERNAME }}/sgii-frontend:latest
+            ${{ vars.DOCKERHUB_USERNAME }}/sgii-frontend:${{ github.sha }}
+          cache-from: type=gha,scope=frontend
+          cache-to: type=gha,mode=max,scope=frontend

@@ -1,0 +1,34 @@
+# --- Notas de trabajo, no publicables ---
+# Guia, marcadores, mediciones y bloques del pom. Viven junto al proyecto
+# por comodidad, pero NO forman parte del repositorio.
+/privado/
+
+# --- Secretos y configuracion local ---
+.env
+*.env.local
+
+# --- Java / Maven ---
+target/
+!.mvn/wrapper/maven-wrapper.jar
+*.log
+
+# --- Angular / Node ---
+node_modules/
+dist/
+.angular/
+
+# --- Reportes de cobertura y pruebas ---
+**/jacoco.exec
+**/site/jacoco/
+**/surefire-reports/
+**/failsafe-reports/
+
+# --- IDE ---
+.idea/
+*.iml
+.vscode/
+*.swp
+
+# --- Sistema operativo ---
+.DS_Store
+Thumbs.db

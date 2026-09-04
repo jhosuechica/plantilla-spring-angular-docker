@@ -43,7 +43,7 @@ Decisiones internas relevantes:
 | Jenkins | Requiere un servidor propio, mantenerlo, actualizarlo y asegurarlo. Desproporcionado para este proyecto |
 | GitLab CI | Excelente, pero implicaría migrar el repositorio |
 | Sin CI, builds locales | El problema que se quiere resolver |
-| Publicar en GHCR en vez de Docker Hub | Válido y hasta más integrado, pero Docker Hub es más reconocible en un portafolio y no requiere autenticación para descargar |
+| Publicar en GHCR en vez de Docker Hub | Válido y hasta más integrado con GitHub, pero las imágenes de Docker Hub se descargan sin autenticación previa |
 
 ## Consecuencias
 

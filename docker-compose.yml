@@ -1,11 +1,11 @@
 # Sistema de Gestion Institucional de Indicadores (SGII)
 # Levanta el stack completo con: docker compose up -d
-name: sgii
+name: ${PROYECTO:-miapp}
 
 services:
   db:
     image: postgres:16-alpine
-    container_name: sgii-db
+    container_name: ${PROYECTO:-miapp}-db
     restart: unless-stopped
     environment:
       POSTGRES_DB: ${POSTGRES_DB}
@@ -25,7 +25,7 @@ services:
       timeout: 5s
       retries: 5
       start_period: 10s
-    networks: [sgii-net]
+    networks: [red]
 
   backend:
     build:
@@ -33,8 +33,8 @@ services:
       dockerfile: Dockerfile
       args:
         JAVA_VERSION: ${JAVA_VERSION:-21}
-    image: ${DOCKERHUB_USERNAME:-local}/sgii-backend:${TAG:-latest}
-    container_name: sgii-backend
+    image: ${DOCKERHUB_USERNAME:-local}/${PROYECTO:-miapp}-backend:${TAG:-latest}
+    container_name: ${PROYECTO:-miapp}-backend
     restart: unless-stopped
     environment:
       SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-docker}
@@ -50,7 +50,7 @@ services:
     depends_on:
       db:
         condition: service_healthy
-    networks: [sgii-net]
+    networks: [red]
 
   frontend:
     build:
@@ -58,21 +58,21 @@ services:
       dockerfile: Dockerfile
       args:
         NODE_VERSION: ${NODE_VERSION:-20}
-    image: ${DOCKERHUB_USERNAME:-local}/sgii-frontend:${TAG:-latest}
-    container_name: sgii-frontend
+    image: ${DOCKERHUB_USERNAME:-local}/${PROYECTO:-miapp}-frontend:${TAG:-latest}
+    container_name: ${PROYECTO:-miapp}-frontend
     restart: unless-stopped
     ports:
       - "${FRONTEND_PORT:-4200}:80"
     depends_on:
       backend:
         condition: service_healthy
-    networks: [sgii-net]
+    networks: [red]
 
 volumes:
   pgdata:
-    name: sgii-pgdata
+    name: ${PROYECTO:-miapp}-pgdata
 
 networks:
-  sgii-net:
-    name: sgii-net
+  red:
+    name: ${PROYECTO:-miapp}-net
     driver: bridge

@@ -2,8 +2,8 @@
 
 ## Visión general
 
-El sistema se despliega como tres contenedores en una única red bridge de
-Docker (`sgii-net`). La superficie expuesta al host es mínima: solo el frontend
+La plantilla despliega la aplicación como tres contenedores en una única red
+bridge de Docker, nombrada a partir de la variable `PROYECTO`. La superficie expuesta al host es mínima: solo el frontend
 y la API publican puertos; la base de datos únicamente es alcanzable desde
 dentro de la red.
 
@@ -15,13 +15,13 @@ flowchart TB
         P1["localhost:4200"]
         P2["localhost:8080"]
 
-        subgraph net["Red sgii-net (bridge)"]
+        subgraph net["Red del proyecto (bridge)"]
             F["frontend<br/>nginx:1.27-alpine<br/>archivos estáticos + proxy"]
             B["backend<br/>eclipse-temurin:21-jre-alpine<br/>API REST"]
             D[("db<br/>postgres:16-alpine")]
         end
 
-        V[("volumen sgii-pgdata")]
+        V[("volumen ${PROYECTO}-pgdata")]
     end
 
     U --> P1 --> F
@@ -50,7 +50,7 @@ No hay Node en la imagen final: Angular compilado son archivos estáticos.
 
 ### `backend`: Spring Boot
 
-API REST y lógica de negocio. Se configura por completo mediante variables de
+La aplicación que use la plantilla. Contiene la API REST y la lógica de negocio. Se configura por completo mediante variables de
 entorno (`SPRING_DATASOURCE_*`, `JWT_SECRET`, `SPRING_PROFILES_ACTIVE`), sin
 credenciales en el `application.yml` versionado.
 
@@ -61,7 +61,7 @@ Corre como usuario sin privilegios (`spring`), no como root.
 
 ### `db`: PostgreSQL
 
-Los datos viven en el volumen nombrado `sgii-pgdata`, separado del ciclo de vida
+Los datos viven en el volumen nombrado `${PROYECTO}-pgdata`, separado del ciclo de vida
 de los contenedores: `docker compose down` conserva los datos, `down -v` los
 elimina.
 
@@ -77,9 +77,9 @@ sequenceDiagram
     participant B as Spring Boot (backend)
     participant D as PostgreSQL (db)
 
-    N->>F: GET /indicadores
+    N->>F: GET /recursos
     F-->>N: index.html + bundle JS
-    N->>F: GET /api/indicadores
+    N->>F: GET /api/recursos
     F->>B: proxy_pass a backend:8080
     B->>D: SELECT vía JDBC
     D-->>B: filas

@@ -18,12 +18,12 @@ la configuración local. Eso produce tres problemas:
 
 Declarar PostgreSQL como un servicio más del `docker-compose.yml`, con:
 
-- **Volumen nombrado** `sgii-pgdata` para los datos, separado del ciclo de vida
+- **Volumen nombrado** `${PROYECTO}-pgdata` para los datos, separado del ciclo de vida
   del contenedor.
 - **Healthcheck** con `pg_isready`, y `condition: service_healthy` en el
   `depends_on` del backend.
 - **Puerto 5432 no publicado** al host por defecto: la base de datos solo es
-  visible dentro de la red `sgii-net`.
+  visible dentro de la red interna del proyecto.
 - **Credenciales por variables de entorno** leídas de `.env`, que no se
   versiona; en el repositorio solo va `.env.example`.
 

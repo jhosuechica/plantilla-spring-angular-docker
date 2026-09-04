@@ -14,5 +14,5 @@ spring:
 logging:
   level:
     root: WARN
-    io.github.jhosuechica.indicadores: DEBUG
+    com.example: DEBUG   # cambia esto por el paquete raiz de tu aplicacion
     org.testcontainers: INFO

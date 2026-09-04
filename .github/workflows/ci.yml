@@ -221,25 +221,49 @@ jobs:
         run: docker compose down -v
 
   # ---------------------------------------------------------------------------
+  # Publicar imagenes es OPCIONAL. Si no hay credenciales configuradas, el job
+  # no se ejecuta en lugar de fallar: un pipeline que se pone rojo porque una
+  # funcion opcional no esta configurada entrena a la gente a ignorar el rojo,
+  # y entonces deja de servir para detectar los fallos que si importan.
+  #
+  # La condicion mira 'vars' y no 'secrets' porque el contexto de secretos no
+  # esta disponible en el 'if' de un job. Que falte el token estando la
+  # variable puesta se comprueba dentro, en el primer paso.
   publicar:
     name: Publicar imagenes en Docker Hub
     runs-on: ubuntu-latest
     needs: [humo]
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    if: >-
+      github.ref == 'refs/heads/main'
+      && github.event_name == 'push'
+      && vars.DOCKERHUB_USERNAME != ''
     steps:
       - uses: actions/checkout@v5
 
+      # Si la variable esta puesta pero falta el token, el mensaje de
+      # docker/login-action ("Username and password required") no dice cual de
+      # los dos falta. Este paso si lo dice.
+      - name: Comprobar que el token existe
+        env:
+          TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+        run: |
+          if [ -z "$TOKEN" ]; then
+            echo "::error::DOCKERHUB_USERNAME esta configurada como Variable, pero falta el Secret DOCKERHUB_TOKEN. Anadelo en Settings > Secrets and variables > Actions > Secrets."
+            exit 1
+          fi
+          echo "Credenciales presentes."
+
       - name: Configurar Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@v4
 
       - name: Login en Docker Hub
-        uses: docker/login-action@v3
+        uses: docker/login-action@v4
         with:
           username: ${{ vars.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Publicar backend
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: ./backend
           push: true
@@ -250,7 +274,7 @@ jobs:
           cache-to: type=gha,mode=max,scope=backend
 
       - name: Publicar frontend
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: ./frontend
           push: true

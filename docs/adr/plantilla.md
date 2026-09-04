@@ -25,9 +25,9 @@ descartadas no es una decisión: es un accidente.
 
 ## Consecuencias
 
-**Positivas** — qué mejora.
+**Positivas:** qué mejora.
 
-**Negativas** — qué se pierde o se complica. Escribirlas es lo que distingue un
+**Negativas:** qué se pierde o se complica. Escribirlas es lo que distingue un
 ADR honesto de una justificación a posteriori.
 
-**A vigilar** — bajo qué condiciones habría que revisar esta decisión.
+**A vigilar:** bajo qué condiciones habría que revisar esta decisión.

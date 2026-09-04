@@ -33,7 +33,7 @@ flowchart TB
 
 ## Componentes
 
-### `frontend` — Nginx + Angular compilado
+### `frontend`: Nginx + Angular compilado
 
 Sirve el bundle estático de Angular y hace de *reverse proxy* de la API.
 
@@ -48,7 +48,7 @@ Responsabilidades:
 
 No hay Node en la imagen final: Angular compilado son archivos estáticos.
 
-### `backend` — Spring Boot
+### `backend`: Spring Boot
 
 API REST y lógica de negocio. Se configura por completo mediante variables de
 entorno (`SPRING_DATASOURCE_*`, `JWT_SECRET`, `SPRING_PROFILES_ACTIVE`), sin
@@ -59,7 +59,7 @@ imagen y la condición de arranque del frontend en Compose.
 
 Corre como usuario sin privilegios (`spring`), no como root.
 
-### `db` — PostgreSQL
+### `db`: PostgreSQL
 
 Los datos viven en el volumen nombrado `sgii-pgdata`, separado del ciclo de vida
 de los contenedores: `docker compose down` conserva los datos, `down -v` los

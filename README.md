@@ -283,14 +283,14 @@ Todas las cifras se midieron en el mismo equipo, promediando tres ejecuciones.
 
 | Métrica | Antes | Después | Mejora |
 |---|---|---|---|
-| Puesta en marcha desde cero (máquina nueva) | — | — | — |
-| Tamaño de la imagen del backend | — | — | — |
-| Pasos manuales para desplegar | — | — | — |
-| Cobertura de pruebas (líneas) | 0 % | — | — |
+| Puesta en marcha desde cero (máquina nueva) | - | - | - |
+| Tamaño de la imagen del backend | - | - | - |
+| Pasos manuales para desplegar | - | - | - |
+| Cobertura de pruebas (líneas) | 0 % | - | - |
 
 ---
 
 ## Autor
 
-**Jhosué Chica** — Desarrollador de Software
+**Jhosué Chica**, Desarrollador de Software
 [LinkedIn](https://www.linkedin.com/in/jhosue-chica-0811a933a) · [GitHub](https://github.com/jhosuechica)

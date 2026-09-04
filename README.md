@@ -1,6 +1,6 @@
 # Plantilla de contenerización y CI/CD para Spring Boot + Angular
 
-[![CI/CD](https://github.com/jhosuechica/sgii-indicadores/actions/workflows/ci.yml/badge.svg)](https://github.com/jhosuechica/sgii-indicadores/actions/workflows/ci.yml)
+[![CI/CD](https://github.com/jhosuechica/plantilla-spring-angular-docker/actions/workflows/ci.yml/badge.svg)](https://github.com/jhosuechica/plantilla-spring-angular-docker/actions/workflows/ci.yml)
 [![Java](https://img.shields.io/badge/Java-21-orange)](https://openjdk.org/projects/jdk/21/)
 [![Docker](https://img.shields.io/badge/Docker-Compose-2496ED)](https://docs.docker.com/compose/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-336791)](https://www.postgresql.org/)
@@ -82,7 +82,7 @@ fallan y el frontend nunca arranca, porque espera a que el backend esté sano.
 ## Cómo usarla
 
 ```bash
-git clone https://github.com/jhosuechica/sgii-indicadores.git plantilla
+git clone https://github.com/jhosuechica/plantilla-spring-angular-docker.git plantilla
 ```
 
 Copia el contenido sobre tu proyecto. El punto es necesario para que se copien
